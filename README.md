@@ -4,4 +4,4 @@ Archive of miscellaneous PowerShell scripts.
 ![alt text](https://upload.wikimedia.org/wikipedia/commons/a/af/PowerShell_Core_6.0_icon.png "PowerShell")
 
 
-This repo contains miscellaneous PowerShell scripts i've created whilst at university. Mainly for future reference.
+Miscellaneous PS scripts I've created. Mainly for myself to use.
