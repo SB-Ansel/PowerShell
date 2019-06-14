@@ -1,7 +1,7 @@
 $softwareVersion = "Version 2.0 - 06-11-2019"
 $hostname = whoami
 $Author = "Built by SB-Ansel"
-~# $osString = systeminfo | findstr /B /C:"OS Name" /C:"OS Name" - Slows the script down, might reimplement later.
+# $osString = systeminfo | findstr /B /C:"OS Name" /C:"OS Name" - Slows the script down, might reimplement later.
 
 Clear-Host
     Write-Output ' ***********************************************************'
