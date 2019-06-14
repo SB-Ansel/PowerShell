@@ -22,7 +22,7 @@ $color = $host.ui.RawUI.ForegroundColor
     Write-Output ''
     Write-Output '--Windows Installation check--------------------------------'.ToUpper()
 #Pre test environment
-function PreInitialization{
+function PreInitialization {
   #Windows installation check
 If ($env:SystemDrive -eq "C:" -And $env:SystemRoot -eq "C:\Windows"){
   Write-Host 'Standard Windows installation'
@@ -42,6 +42,18 @@ if ($Preinit -eq 'Unrestricted'){
 Elseif ($Preinit -eq 'RemoteSigned'){
   Write-Host 'Current policy set to: RemoteSigned'
 }
+Elseif ($Preinit -eq 'Undefined'){
+  Write-Host 'Current policy set to: Undefined'
+  $policy = Read-Host 'Warning: Your current system execution policy only allows signed scripts to run, would you like too turn on unrestricted execution policy? y/n '
+  if ($policy -eq 'y'){
+    Set-ExecutionPolicy -Scope CurrentUser Unrestricted
+    Start-Sleep -milliseconds 500
+    $GetPolicy = Get-ExecutionPolicy
+    if ($GetPolicy -eq 'Unrestricted'){
+      Write-Host $GetPolicy
+      Start-Sleep -milliseconds 500
+    }
+  }
 Elseif ($Preinit -eq 'AllSigned'){
   Write-Host 'Current policy set to: AllSigned'
   $policy = Read-Host 'Warning: Your current system execution policy only allows signed scripts to run, would you like too turn on unrestricted execution policy? y/n '
@@ -67,12 +79,13 @@ Elseif ($Preinit -eq 'AllSigned'){
     Clear-Host
     exit
     } 
-  }
+}
 else{
   Write-Host 'Unknown Execution Policy, Exiting'
   Start-Sleep -milliseconds 500
   Clear-Host
   exit
+  }
 }
 }
 
