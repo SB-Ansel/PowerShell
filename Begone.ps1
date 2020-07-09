@@ -1,39 +1,29 @@
-$softwareVersion = "Version 2.0 - 06-11-2019"
-$hostname = whoami
+$SoftwareVersion = "V2 - 06-11-2019"
 $Author = "Built by SB-Ansel"
-# $osString = systeminfo | findstr /B /C:"OS Name" /C:"OS Name" - Slows the script down, might reimplement later.
+$Hostname = whoami
+$Color = $host.ui.RawUI.ForegroundColor
 
-Clear-Host
-    Write-Output ' ***********************************************************'
-    Write-Output ' *                                                         *'
-    Write-Output ' *        Begone - Windows Built-in Apps remover           *'
-    Write-Output ' *        USE AT YOUR OWN RISK                             *'
-    Write-Output " *        $softwareVersion                         *"
-    Write-Output " *        $Author                                *"
-    Write-Output ' *                                                         *'
-    Write-Output ' ***********************************************************'
-    Write-Output ''
+Clear-Host # Clears previous entered commands from the PS windows.
+Write-Host '***********************************************************'
+Write-Host '*                                                         *'
+Write-Host '*        Begone - Windows Built-in Apps remover           *'
+Write-Host '*        USE AT YOUR OWN RISK                             *'
+Write-Host "*        $SoftwareVersion                                   *"
+Write-Host "*        $Author                                *"
+Write-Host '*                                                         *'
+Write-Host '***********************************************************'
+Write-Host ''
 
-$color = $host.ui.RawUI.ForegroundColor
-    $host.ui.RawUI.ForegroundColor = "Yellow"
-    Write-Output " Current Device/User : $hostname"
-    $host.ui.RawUI.ForegroundColor = $color
-    # Write-Output " Operating System : $osString"
-    Write-Output ''
-    Write-Output '--Windows Installation check--------------------------------'.ToUpper()
-#Pre test environment
-function PreInitialization {
-  #Windows installation check
-If ($env:SystemDrive -eq "C:" -And $env:SystemRoot -eq "C:\Windows"){
-  Write-Host 'Standard Windows installation'
-  Write-Host 'Number of deleted apps: ', (Get-ChildItem 'C:\Program Files\WindowsApps\DeletedAllUserPackages').Count
-  Write-Output ''
-}
-Else {
-  'Non-standard Windows installation.. all bets are off brother.'
-}
-Start-Sleep -milliseconds 500 
-#Pre Initialization
+$host.ui.RawUI.ForegroundColor = "Yellow"
+Write-Host "Current Device/User : $Hostname"
+$host.ui.RawUI.ForegroundColor = $Color
+Write-Host ''
+Write-Host '--Windows Installation check--------------------------------'.ToUpper()
+# Check for deleted appx packages
+function PreInitialization (){
+  Write-Host 'Current Appx Packages deleted: ', (Get-ChildItem $env:SystemDrive'\Program Files\WindowsApps\DeletedAllUserPackages').Count
+  Write-Host ''
+# Get current execution policy
 $Preinit = Get-ExecutionPolicy
 Write-Host '--Windows Policy Check--------------------------------------'.ToUpper()
 if ($Preinit -eq 'Unrestricted'){
@@ -47,11 +37,9 @@ Elseif ($Preinit -eq 'Undefined'){
   $policy = Read-Host 'Warning: Your current system execution policy only allows signed scripts to run, would you like too turn on unrestricted execution policy? y/n '
   if ($policy -eq 'y'){
     Set-ExecutionPolicy -Scope CurrentUser Unrestricted
-    Start-Sleep -milliseconds 500
     $GetPolicy = Get-ExecutionPolicy
     if ($GetPolicy -eq 'Unrestricted'){
       Write-Host $GetPolicy
-      Start-Sleep -milliseconds 500
     }
   }
 Elseif ($Preinit -eq 'AllSigned'){
@@ -91,34 +79,42 @@ else{
 
 PreInitialization
 #Initalization
+function Initalization(){
+Write-Host ''
+Write-Host '--Provisioned Appx Packages for this Windows version--------'.ToUpper()
+Write-Host ''
+$int = 1
+$Path = Get-ChildItem $env:SystemDrive'\Program Files\WindowsApps\DeletedAllUserPackages' | Select-String Microsoft | Sort-Object Microsoft
+$Appx = (DISM /Online /Get-ProvisionedAppxPackages | Select-String PackageName | Sort-Object PackageName)
+$Appx = $Appx -replace('PackageName','')
+# $Appx = $Appx -replace('Microsoft','')
+$Appx = $Appx -replace(':','')
+$Appx = $Appx -replace(' ','')
+
+foreach ($item in $Path) {
+  if ($Path -notcontains $Appx) {
+  $host.ui.RawUI.ForegroundColor = "Yellow"
+  Write-Host ([int]$int++) :> $Appx
+  $host.ui.RawUI.ForegroundColor = $Color
+  }elseif ($Path -contains $Appx) {
+    $host.ui.RawUI.ForegroundColor = "Green"
+    Write-Host ([int]$int++) :> $Appx
+    $host.ui.RawUI.ForegroundColor = $Color
+  }else{
+    'This is really screwing the pouch'
+  }
+}
+# } elseif  ($Path -notmatch 'Microsoft.'){
+#   $host.ui.RawUI.ForegroundColor = "DarkYellow"
+#     $Path
+#   $host.ui.RawUI.ForegroundColor = $Color
+# }}
+
+# $Appx | ForEach-Object {Write-Host ([int]$int++) :> $_}
+}
+
+Initalization
 ''
-'[1] *bingfinance*'
-'[2] *bingnews*'
-'[3] *bingsports*'
-'[4] *bingweather*'
-'[5] *gethelp*'
-'[6] *getstarted*'
-'[7] *messaging*'
-'[8] *mspaint*'
-'[9] *officehub*'
-'[10] *oneconnect*'
-'[11] *onenote*'
-'[12] *people*' 
-'[13] *print3d*'#look at this one
-'[14] *skypeapp*'
-'[15] *solitairecollection*'
-'[16] *StickyNotes*'
-'[17] *soundrecorder*'
-'[18] *windowscamera'
-'[19] *windowsfeedbackhub*'
-'[20] *windowsmaps*'
-'[21] *windowsphone*'
-'[22] *windowsalarms*'
-'[23] *xboxapp*'
-'[24] *zunemusic*'
-'[25] *zunevideo*'
-'[26] *3dbuilder*'
-'[27] *3dviewer*'#look at this one
 ''
 '[u] Uninstall all apps in list'
 '[r] Reinstall all apps in list'
@@ -128,74 +124,20 @@ PreInitialization
 ''
 
 function UninstallAll(){
-  Write-Host 'Uninstalling please stand by..'
-  Start-Sleep -milliseconds 750
-  Get-AppxPackage *bingfinance* | Remove-AppxPackage
-  Get-AppxPackage *bingnews* | Remove-AppxPackage
-  Get-AppxPackage *bingsports* | Remove-AppxPackage
-  Get-AppxPackage *bingweather* | Remove-AppxPackage
-  Get-AppxPackage *gethelp*  | Remove-AppxPackage
-  Get-AppxPackage *getstarted* | Remove-AppxPackage
-  Get-AppxPackage *messaging*  | Remove-AppxPackage
-  Get-AppxPackage *mspaint*  | Remove-AppxPackage
-  Get-AppxPackage *officehub*  | Remove-AppxPackage
-  Get-AppxPackage *oneconnect*  | Remove-AppxPackage
-  Get-AppxPackage *onenote* | Remove-AppxPackage
-  Get-AppxPackage *people* | Remove-AppxPackage
-  Get-AppxPackage *print3d* | Remove-AppxPackage
-  Get-AppxPackage *skypeapp* | Remove-AppxPackage
-  Get-AppxPackage *solitairecollection* | Remove-AppxPackage
-  Get-AppxPackage *StickyNotes* | Remove-AppxPackage
-  Get-AppxPackage *soundrecorder* | Remove-AppxPackage
-  Get-AppxPackage *windowscamera* | Remove-AppxPackage
-  Get-AppxPackage *windowsfeedbackhub*  | Remove-AppxPackage
-  Get-AppxPackage *windowsmaps* | Remove-AppxPackage
-  Get-AppxPackage *windowsphone* | Remove-AppxPackage
-  Get-AppxPackage *windowsalarms* | Remove-AppxPackage
-  Get-AppxPackage *xboxapp*  | Remove-AppxPackage
-  Get-AppxPackage *zunemusic* | Remove-AppxPackage
-  Get-AppxPackage *zunevideo* | Remove-AppxPackage
-  Get-AppxPackage *3dbuilder* | Remove-AppxPackage
-  Get-AppxPackage *3dviewer* | Remove-AppxPackage
+  # (Something) + Remove-AppxPackage
 }
-
+# A better way of doing this would be to get package name and just append either add-appxpackage or remove-appxpackage.
 function ReinstallAll(){
-  Get-AppxPackage *bingfinance* | Add-AppxPackage
-  Get-AppxPackage *bingnews* | Add-AppxPackage
-  Get-AppxPackage *bingsports* | Add-AppxPackage
-  Get-AppxPackage *bingweather* | Add-AppxPackage
-  Get-AppxPackage *gethelp*  | Add-AppxPackage
-  Get-AppxPackage *getstarted* | Add-AppxPackage
-  Get-AppxPackage *messaging*  | Add-AppxPackage
-  Get-AppxPackage *mspaint*  | Add-AppxPackage
-  Get-AppxPackage *officehub*  | Add-AppxPackage
-  Get-AppxPackage *oneconnect*  | Add-AppxPackage
-  Get-AppxPackage *onenote* | Add-AppxPackage
-  Get-AppxPackage *people* | Add-AppxPackage
-  Get-AppxPackage *print3d* | Add-AppxPackage
-  Get-AppxPackage *skypeapp* | Add-AppxPackage
-  Get-AppxPackage *solitairecollection* | Add-AppxPackage
-  Get-AppxPackage *StickyNotes* | Add-AppxPackage
-  Get-AppxPackage *soundrecorder* | Add-AppxPackage
-  Get-AppxPackage *windowscamera* | Add-AppxPackage
-  Get-AppxPackage *windowsfeedbackhub*  | Add-AppxPackage
-  Get-AppxPackage *windowsmaps* | Add-AppxPackage
-  Get-AppxPackage *windowsphone* | Add-AppxPackage
-  Get-AppxPackage *windowsalarms* | Add-AppxPackage
-  Get-AppxPackage *xboxapp*  | Add-AppxPackage
-  Get-AppxPackage *zunemusic* | Add-AppxPackage
-  Get-AppxPackage *zunevideo* | Add-AppxPackage
-  Get-AppxPackage *3dbuilder* | Add-AppxPackage
-  Get-AppxPackage *3dviewer* | Add-AppxPackage
+  # (Something) + Add-AppxPackage
 }
 
 $option = 0
 
 function GetOption {
-  $option = Read-Host 'Begone:> Choose 1 - 27 to uninstall Windows built-in apps '
-  ExecuteOption
+  $option = Read-Host 'Begone:> Choose 1 ' $int ' to uninstall Windows built-in apps '
+  # ExecuteOption
 }
-function ExecuteOption {
+function ExecuteOption { # We need a variable for either -User J-Madden or -AllUsers. 
   if ($option -eq '1') {
     Get-AppxPackage *bingfinance* | Remove-AppxPackage
   }
